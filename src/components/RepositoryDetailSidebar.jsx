@@ -5,9 +5,14 @@ const API_BASE_URL = 'http://localhost:8000/api/v1'
 function RepositoryDetailSidebar({ repo, username, onClose }) {
   const [repoDetails, setRepoDetails] = useState(null)
   const [analysis, setAnalysis] = useState(null)
+  const [contributionAnalysis, setContributionAnalysis] = useState(null)
   const [loadingDetails, setLoadingDetails] = useState(true)
   const [loadingAnalysis, setLoadingAnalysis] = useState(true)
+  const [loadingContributionAnalysis, setLoadingContributionAnalysis] = useState(false)
   const [detailsError, setDetailsError] = useState(null)
+
+  // Check if this is a multi-contributor repo (has more than 1 contributor)
+  const isMultiContributorRepo = repo.mentionableUsers && repo.mentionableUsers.totalCount > 1
 
   useEffect(() => {
     if (repo) {
@@ -53,6 +58,26 @@ function RepositoryDetailSidebar({ repo, username, onClose }) {
       console.error('Error fetching AI analysis:', err)
     } finally {
       setLoadingAnalysis(false)
+    }
+
+    // Fetch contribution analysis for multi-contributor repos
+    if (repo.mentionableUsers && repo.mentionableUsers.totalCount > 1) {
+      setLoadingContributionAnalysis(true)
+      setContributionAnalysis(null)
+      try {
+        const contributionResponse = await fetch(
+          `${API_BASE_URL}/analyze/${owner}/${name}/contributions/${username}`
+        )
+        if (!contributionResponse.ok) throw new Error('Failed to fetch contribution analysis')
+        const contributionData = await contributionResponse.json()
+        console.log("Contribution analysis response:", contributionData)
+        setContributionAnalysis(contributionData)
+        console.log("Contribution analysis:", contributionData)
+      } catch (err) {
+        console.error('Error fetching contribution analysis:', err)
+      } finally {
+        setLoadingContributionAnalysis(false)
+      }
     }
   }
 
@@ -230,6 +255,123 @@ function RepositoryDetailSidebar({ repo, username, onClose }) {
             <p className="text-gray-500 text-sm">No AI summary available</p>
           )}
         </div>
+
+        {/* Your Contribution Section - For multi-contributor repos */}
+        {isMultiContributorRepo && (
+          <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-sm rounded-2xl p-5 border border-indigo-500/30">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              {username}'s Contribution
+              <span className="ml-auto text-xs text-indigo-400 font-normal">AI Analysis</span>
+            </h3>
+            
+            {loadingContributionAnalysis ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-gray-400">Analyzing your contributions...</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-indigo-700/30 rounded-lg animate-pulse w-full"></div>
+                  <div className="h-4 bg-indigo-700/30 rounded-lg animate-pulse w-5/6"></div>
+                  <div className="h-4 bg-indigo-700/30 rounded-lg animate-pulse w-4/6"></div>
+                </div>
+              </div>
+            ) : contributionAnalysis ? (
+              <div className="space-y-4">
+                {/* Contribution Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {contributionAnalysis.contribution_stats?.commits || 0}
+                    </div>
+                    <div className="text-xs text-gray-400">Commits</div>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {contributionAnalysis.contribution_stats?.pull_requests || 0}
+                    </div>
+                    <div className="text-xs text-gray-400">PRs</div>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {contributionAnalysis.contribution_stats?.issues || 0}
+                    </div>
+                    <div className="text-xs text-gray-400">Issues</div>
+                  </div>
+                </div>
+
+                {/* Impact Level Badge */}
+                {contributionAnalysis.ai_analysis?.impact_level && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">Impact Level:</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      contributionAnalysis.ai_analysis.impact_level.toLowerCase() === 'high' 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : contributionAnalysis.ai_analysis.impact_level.toLowerCase() === 'medium'
+                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                    }`}>
+                      {contributionAnalysis.ai_analysis.impact_level}
+                    </span>
+                  </div>
+                )}
+
+                {/* Role Summary - Combined field from AI */}
+                {contributionAnalysis.ai_analysis?.role_summary && (
+                  <div>
+                    <span className="text-gray-400 text-sm block mb-2">Role Summary</span>
+                    <p className="text-gray-300 leading-relaxed text-sm bg-gray-800/40 rounded-xl p-3">
+                      {contributionAnalysis.ai_analysis.role_summary}
+                    </p>
+                  </div>
+                )}
+
+                {/* Key Contributions */}
+                {contributionAnalysis.ai_analysis?.key_contributions && 
+                 contributionAnalysis.ai_analysis.key_contributions.length > 0 && (
+                  <div>
+                    <span className="text-gray-400 text-sm block mb-2">Key Contributions</span>
+                    <ul className="space-y-2">
+                      {contributionAnalysis.ai_analysis.key_contributions.map((contribution, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
+                          <svg className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          {contribution}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Skills Demonstrated */}
+                {contributionAnalysis.ai_analysis?.skills_demonstrated && 
+                 contributionAnalysis.ai_analysis.skills_demonstrated.length > 0 && (
+                  <div>
+                    <span className="text-gray-400 text-sm block mb-2">Skills Demonstrated</span>
+                    <div className="flex flex-wrap gap-2">
+                      {contributionAnalysis.ai_analysis.skills_demonstrated.map((skill, index) => (
+                        <span 
+                          key={index}
+                          className="px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg text-xs font-medium border border-indigo-500/20"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">Unable to analyze contributions for this repository.</p>
+            )}
+          </div>
+        )}
 
         {/* README Section */}
         <div className="bg-gray-800/40 backdrop-blur-sm rounded-2xl p-5 border border-gray-700/30">
