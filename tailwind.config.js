@@ -9,6 +9,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      screens: {
+        'xs': '480px', // Extra small screens
+      },
     },
   },
   plugins: [],
