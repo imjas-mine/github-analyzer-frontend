@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import RepositoryCard from '../components/RepositoryCard'
+import RepositoryDetailSidebar from '../components/RepositoryDetailSidebar'
 
 const API_BASE_URL = 'http://localhost:8000/api/v1'
 
@@ -8,6 +10,7 @@ function Dashboard() {
   const [username, setUsername] = useState('')
   const [profile, setProfile] = useState(null)
   const [repositories, setRepositories] = useState([])
+  const [selectedRepo, setSelectedRepo] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -76,31 +79,33 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
-      {/* Navigation */}
-      <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto border-b border-gray-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
+      {/* Navigation - Sticky */}
+      <nav className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-gray-800">
+        <div className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </div>
+            <span className="text-white text-xl font-bold">GitHub Analyzer</span>
           </div>
-          <span className="text-white text-xl font-bold">GitHub Analyzer</span>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <span className="text-gray-400">Dashboard</span>
-          <button 
-            onClick={() => navigate('/')}
-            className="text-gray-300 hover:text-white transition-colors"
-          >
-            Back to Home
-          </button>
+          
+          <div className="flex items-center gap-6">
+            <span className="text-gray-400">Dashboard</span>
+            <button 
+              onClick={() => navigate('/')}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Profile Section */}
       {profile && (
-        <div className="max-w-7xl mx-auto px-8 py-12">
+        <div className={`max-w-7xl mx-auto px-8 py-12 transition-all duration-300 ${selectedRepo ? 'lg:mr-[600px] md:mr-[550px]' : ''}`}>
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 mb-8">
             <div className="flex items-start gap-6">
               <img 
@@ -145,11 +150,10 @@ function Dashboard() {
             <div className="space-y-6">
               {repositories.map((repo, index) => {
                 const year = new Date(repo.createdAt).getFullYear()
-                //showing year heading or not
                 const showYear = index === 0 || new Date(repositories[index - 1].createdAt).getFullYear() !== year
                 
                 return (
-                  <div key={repo.id}>
+                  <div key={repo.id || repo.name}>
                     {showYear && (
                       <div className="flex items-center gap-4 mb-6">
                         <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold">
@@ -161,71 +165,22 @@ function Dashboard() {
                     
                     <div className="flex gap-6 group">
                       <div className="flex flex-col items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full group-hover:scale-150 transition-transform"></div>
+                        <div className={`w-3 h-3 rounded-full group-hover:scale-150 transition-transform ${
+                          selectedRepo?.name === repo.name ? 'bg-blue-400 scale-150' : 'bg-blue-500'
+                        }`}></div>
                         {index < repositories.length - 1 && (
                           <div className="w-px flex-1 bg-gray-700 mt-2"></div>
                         )}
                       </div>
                       
                       <div className="flex-1 pb-8">
-                        <div className="bg-gray-800/50 hover:bg-gray-800/70 border border-gray-700/50 rounded-2xl p-6 transition-all cursor-pointer">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
-                                {repo.name}
-                              </h3>
-                              <div className="flex items-center gap-2">
-                                {/* Owner Badge - Show if user is the owner */}
-                                {repo.owner && repo.owner.login.toLowerCase() === username.toLowerCase() && (
-                                  <span className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 text-yellow-400 px-3 py-1 rounded-full text-xs font-semibold">
-                                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    Owner
-                                  </span>
-                                )}
-                                {/* Contribution Badge - Show if there are multiple contributors */}
-                                {repo.mentionableUsers && repo.mentionableUsers.totalCount > 1 && (
-                                  <span className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-blue-400 px-3 py-1 rounded-full text-xs font-semibold">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    Contribution
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <span className="text-gray-400 text-sm">{formatDate(repo.createdAt)}</span>
-                          </div>
-                          
-                          <p className="text-gray-400 mb-4">{repo.description || 'No description provided.'}</p>
-                          
-                          <div className="flex items-center gap-6 text-sm">
-                            {repo.primaryLanguage && (
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: repo.primaryLanguage.color || '#888' }}
-                                ></div>
-                                <span className="text-gray-300">{repo.primaryLanguage.name}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-gray-300">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                              <span>{repo.stargazerCount}</span>
-                            </div>
-                            {repo.forkCount > 0 && (
-                              <div className="flex items-center gap-2 text-gray-300">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm0 22c-5.514 0-10-4.486-10-10s4.486-10 10-10 10 4.486 10 10-4.486 10-10 10zm1-17v4h4l-5 6-5-6h4v-4h2z"/>
-                                </svg>
-                                <span>{repo.forkCount}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        <RepositoryCard
+                          repo={repo}
+                          username={username}
+                          formatDate={formatDate}
+                          onClick={() => setSelectedRepo(repo)}
+                          isSelected={selectedRepo?.name === repo.name}
+                        />
                       </div>
                     </div>
                   </div>
@@ -234,6 +189,24 @@ function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Repository Detail Sidebar */}
+      {/* Overlay for clicking outside sidebar */}
+      {selectedRepo && (
+        <div 
+          className="fixed top-[88px] left-0 right-0 bottom-0 bg-black/20 z-30"
+          onClick={() => setSelectedRepo(null)}
+        />
+      )}
+
+      {/* Repository Detail Sidebar */}
+      {selectedRepo && (
+        <RepositoryDetailSidebar
+          repo={selectedRepo}
+          username={username}
+          onClose={() => setSelectedRepo(null)}
+        />
       )}
     </div>
   )
