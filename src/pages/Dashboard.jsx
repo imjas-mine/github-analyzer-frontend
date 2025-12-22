@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import RepositoryCard from '../components/RepositoryCard'
 import RepositoryDetailSidebar from '../components/RepositoryDetailSidebar'
 
-const API_BASE_URL = 'http://localhost:8000/api/v1'
+const API_BASE_URL = 'https://github-analyzer-backend-tuwe.onrender.com/api/v1'
 
 function Dashboard() {
   const navigate = useNavigate()
