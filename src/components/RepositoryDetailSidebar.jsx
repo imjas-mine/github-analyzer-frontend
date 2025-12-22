@@ -87,9 +87,20 @@ function RepositoryDetailSidebar({ repo, username, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 lg:inset-auto lg:top-[88px] lg:right-0 lg:bottom-0 w-full lg:w-[550px] xl:w-[700px] bg-gradient-to-b from-gray-900 via-gray-900 to-[#0f172a] border-l border-gray-700/50 z-40 flex flex-col">
+    <div className="fixed inset-0 lg:top-[88px] lg:left-auto lg:right-0 lg:bottom-0 w-full lg:w-[550px] xl:w-[700px] bg-gradient-to-b from-gray-900 via-gray-900 to-[#0f172a] border-l border-gray-700/50 z-50 flex flex-col">
       {/* Header - Sticky with gradient */}
       <div className="flex-shrink-0 bg-gradient-to-r from-gray-900 via-gray-800/80 to-gray-900 border-b border-gray-700/50 p-4 sm:p-5 lg:p-6">
+        {/* Mobile Back Button - visible only on small screens */}
+        <button
+          onClick={onClose}
+          className="lg:hidden flex items-center gap-2 text-gray-400 hover:text-white mb-3 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span className="text-sm font-medium">Back to Timeline</span>
+        </button>
+
         {/* Close button and title row */}
         <div className="flex items-start justify-between mb-3 sm:mb-4">
           <div className="flex-1 min-w-0">
@@ -103,9 +114,10 @@ function RepositoryDetailSidebar({ repo, username, onClose }) {
               {repo.nameWithOwner}
             </a>
           </div>
+          {/* X button - visible only on large screens */}
           <button
             onClick={onClose}
-            className="ml-4 p-2 hover:bg-gray-700/50 rounded-xl transition-all hover:scale-110"
+            className="hidden lg:flex ml-4 p-2 hover:bg-gray-700/50 rounded-xl transition-all hover:scale-110"
           >
             <svg className="w-5 h-5 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
