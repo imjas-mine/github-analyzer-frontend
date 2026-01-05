@@ -269,16 +269,35 @@ function Dashboard() {
             <span className="text-white text-base sm:text-xl font-bold hidden xs:inline">GitHub Analyzer</span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center gap-6">
+              <span className="text-white font-medium text-sm bg-blue-600/20 border border-blue-500/30 px-3 py-1 rounded-full">
+                Dashboard
+              </span>
+              <button
+                onClick={() => navigate('/features', { state: { returnTo: `/dashboard?username=${username}` } })}
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => navigate('/how-it-works', { state: { returnTo: `/dashboard?username=${username}` } })}
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                How it Works
+              </button>
+
+            </div>
+
             <button
               onClick={() => navigate('/')}
               className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base flex items-center gap-2"
             >
-              <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="hidden sm:inline">Back to Home</span>
-              <span className="sm:hidden">Back</span>
+              <span className="hidden sm:inline">Home</span>
             </button>
           </div>
         </div>
