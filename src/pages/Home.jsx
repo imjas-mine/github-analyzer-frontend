@@ -28,7 +28,7 @@ function Home() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6 lg:gap-8">
           <button onClick={() => navigate('/features')} className="text-gray-300 hover:text-white transition-colors">Features</button>
-          <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">How it Works</a>
+          <button onClick={() => navigate('/how-it-works')} className="text-gray-300 hover:text-white transition-colors">How it Works</button>
           <a href="#about" className="text-gray-300 hover:text-white transition-colors">About</a>
           <button className="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors">
             <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ function Home() {
         <div className="md:hidden bg-gray-800/95 backdrop-blur-md border-b border-gray-700 px-4 py-4 animate-in slide-in-from-top">
           <div className="flex flex-col gap-3">
             <button onClick={() => { navigate('/features'); setMobileMenuOpen(false); }} className="text-gray-300 hover:text-white transition-colors py-2 px-3 rounded-lg hover:bg-gray-700/50 text-left">Features</button>
-            <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors py-2 px-3 rounded-lg hover:bg-gray-700/50">How it Works</a>
+            <button onClick={() => { navigate('/how-it-works'); setMobileMenuOpen(false); }} className="text-gray-300 hover:text-white transition-colors py-2 px-3 rounded-lg hover:bg-gray-700/50 text-left">How it Works</button>
             <a href="#about" className="text-gray-300 hover:text-white transition-colors py-2 px-3 rounded-lg hover:bg-gray-700/50">About</a>
           </div>
         </div>
