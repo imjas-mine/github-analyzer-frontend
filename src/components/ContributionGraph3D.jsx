@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text, Html } from '@react-three/drei'
 import * as THREE from 'three'
 
-const API_BASE_URL = 'https://github-analyzer-backend-tuwe.onrender.com/api/v1'
+const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 
 // Single contribution bar component
 function ContributionBar({ position, height, color, date, count, onHover }) {
@@ -228,20 +228,53 @@ function ContributionGraph3D({ username }) {
     const [data, setData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+    const [availableYears, setAvailableYears] = useState([])
 
+    // Cache to store fetched year data - persists across re-renders
+    const yearCacheRef = useRef({})
+
+    // Fetch data when username or year changes
     useEffect(() => {
         const fetchData = async () => {
             if (!username) return
 
-            setLoading(true)
             setError(null)
 
+            // Check if data is already cached for this year
+            const cacheKey = `${username}-${selectedYear}`
+            if (yearCacheRef.current[cacheKey]) {
+                console.log(`Loading year ${selectedYear} from cache`)
+                setData(yearCacheRef.current[cacheKey])
+                setLoading(false)
+                return
+            }
+
+            setLoading(true)
+
             try {
-                const response = await fetch(`${API_BASE_URL}/users/${username}/contribution-calendar`)
+                const response = await fetch(
+                    `${API_BASE_URL}/users/${username}/contribution-calendar?year=${selectedYear}`
+                )
                 if (!response.ok) throw new Error('Failed to fetch contribution data')
 
                 const result = await response.json()
+
+                // Store in cache
+                yearCacheRef.current[cacheKey] = result
+                console.log(`Cached year ${selectedYear} data`)
+
                 setData(result)
+
+                // Calculate available years from account creation year to current year
+                if (result.accountCreatedYear && availableYears.length === 0) {
+                    const currentYear = new Date().getFullYear()
+                    const years = []
+                    for (let y = currentYear; y >= result.accountCreatedYear; y--) {
+                        years.push(y)
+                    }
+                    setAvailableYears(years)
+                }
             } catch (err) {
                 setError(err.message)
                 console.error('Error fetching contribution calendar:', err)
@@ -251,7 +284,7 @@ function ContributionGraph3D({ username }) {
         }
 
         fetchData()
-    }, [username])
+    }, [username, selectedYear])
 
     // Calculate max contribution count for scaling
     const maxCount = useMemo(() => {
@@ -269,7 +302,7 @@ function ContributionGraph3D({ username }) {
         <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-2xl sm:rounded-3xl overflow-hidden">
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-gray-700/50">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
                             <span className="bg-gradient-to-r from-green-500 to-emerald-400 bg-clip-text text-transparent">
@@ -281,24 +314,45 @@ function ContributionGraph3D({ username }) {
                         </h2>
                         {data && (
                             <p className="text-gray-400 text-sm mt-1">
-                                {data.totalContributions} contributions in the last year
+                                {data.totalContributions} contributions in {selectedYear}
                             </p>
                         )}
                     </div>
 
-                    {/* Legend */}
-                    <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
-                        <span>Less</span>
-                        <div className="flex gap-1">
-                            {['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'].map((color, i) => (
-                                <div
-                                    key={i}
-                                    className="w-3 h-3 rounded-sm"
-                                    style={{ backgroundColor: color }}
-                                />
-                            ))}
+                    <div className="flex items-center gap-4">
+                        {/* Year Selector */}
+                        {availableYears.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <label className="text-gray-400 text-sm">Year:</label>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                    className="bg-gray-700/50 border border-gray-600 text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer hover:bg-gray-600/50 transition-colors"
+                                    disabled={loading}
+                                >
+                                    {availableYears.map((year) => (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Legend */}
+                        <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
+                            <span>Less</span>
+                            <div className="flex gap-1">
+                                {['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'].map((color, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-3 h-3 rounded-sm"
+                                        style={{ backgroundColor: color }}
+                                    />
+                                ))}
+                            </div>
+                            <span>More</span>
                         </div>
-                        <span>More</span>
                     </div>
                 </div>
             </div>
