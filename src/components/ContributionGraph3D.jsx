@@ -231,8 +231,23 @@ function ContributionGraph3D({ username }) {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
     const [availableYears, setAvailableYears] = useState([])
 
-    // Cache to store fetched year data - persists across re-renders
-    const yearCacheRef = useRef({})
+    // Helper functions for sessionStorage cache
+    const getCachedData = (key) => {
+        try {
+            const cached = sessionStorage.getItem(key)
+            return cached ? JSON.parse(cached) : null
+        } catch {
+            return null
+        }
+    }
+
+    const setCachedData = (key, value) => {
+        try {
+            sessionStorage.setItem(key, JSON.stringify(value))
+        } catch (e) {
+            console.warn('Failed to cache data:', e)
+        }
+    }
 
     // Fetch data when username or year changes
     useEffect(() => {
@@ -241,12 +256,21 @@ function ContributionGraph3D({ username }) {
 
             setError(null)
 
-            // Check if data is already cached for this year
-            const cacheKey = `${username}-${selectedYear}`
-            if (yearCacheRef.current[cacheKey]) {
-                console.log(`Loading year ${selectedYear} from cache`)
-                setData(yearCacheRef.current[cacheKey])
+            // Check sessionStorage cache first (persists across navigation)
+            const cacheKey = `contribution-${username}-${selectedYear}`
+            const cachedData = getCachedData(cacheKey)
+
+            if (cachedData) {
+                console.log(`Loading year ${selectedYear} from sessionStorage cache`)
+                setData(cachedData)
                 setLoading(false)
+
+                // Also restore available years from cache
+                const yearsKey = `contribution-years-${username}`
+                const cachedYears = getCachedData(yearsKey)
+                if (cachedYears && availableYears.length === 0) {
+                    setAvailableYears(cachedYears)
+                }
                 return
             }
 
@@ -260,13 +284,13 @@ function ContributionGraph3D({ username }) {
 
                 const result = await response.json()
 
-                // Store in cache
-                yearCacheRef.current[cacheKey] = result
-                console.log(`Cached year ${selectedYear} data`)
+                // Store in sessionStorage cache
+                setCachedData(cacheKey, result)
+                console.log(`Cached year ${selectedYear} data in sessionStorage`)
 
                 setData(result)
 
-                // Calculate available years from account creation year to current year
+                // Calculate and cache available years
                 if (result.accountCreatedYear && availableYears.length === 0) {
                     const currentYear = new Date().getFullYear()
                     const years = []
@@ -274,6 +298,7 @@ function ContributionGraph3D({ username }) {
                         years.push(y)
                     }
                     setAvailableYears(years)
+                    setCachedData(`contribution-years-${username}`, years)
                 }
             } catch (err) {
                 setError(err.message)
