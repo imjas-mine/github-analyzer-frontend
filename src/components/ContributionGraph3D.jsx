@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text, Html } from '@react-three/drei'
 import * as THREE from 'three'
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
+const API_BASE_URL = 'https://github-analyzer-backend-tuwe.onrender.com/api/v1'
 
 // Single contribution bar component
 function ContributionBar({ position, height, color, date, count, onHover }) {
