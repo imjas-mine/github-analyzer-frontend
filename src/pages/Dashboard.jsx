@@ -270,7 +270,6 @@ function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-6">
-            <span className="text-gray-400 text-sm sm:text-base hidden sm:inline">Dashboard</span>
             <button
               onClick={() => navigate('/')}
               className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base flex items-center gap-2"
