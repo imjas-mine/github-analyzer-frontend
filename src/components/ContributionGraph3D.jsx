@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text, Html } from '@react-three/drei'
 import * as THREE from 'three'
+import { useTheme } from '../context/ThemeContext'
 
 const API_BASE_URL = 'https://github-analyzer-backend-tuwe.onrender.com/api/v1'
 
@@ -44,17 +45,17 @@ function ContributionBar({ position, height, color, date, count, onHover }) {
 }
 
 // Grid floor
-function GridFloor() {
+function GridFloor({ isDark }) {
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[26, -0.1, 3]}>
             <planeGeometry args={[60, 12]} />
-            <meshStandardMaterial color="#1e293b" transparent opacity={0.5} />
+            <meshStandardMaterial color={isDark ? '#1e293b' : '#cbd5e1'} transparent opacity={0.5} />
         </mesh>
     )
 }
 
 // Week labels (months)
-function MonthLabels({ weeks }) {
+function MonthLabels({ weeks, isDark }) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     const labels = []
     let lastMonth = -1
@@ -77,7 +78,7 @@ function MonthLabels({ weeks }) {
                     key={i}
                     position={[label.weekIndex, -0.5, -1.5]}
                     fontSize={0.6}
-                    color="#94a3b8"
+                    color={isDark ? '#94a3b8' : '#64748b'}
                     anchorX="center"
                 >
                     {label.month}
@@ -88,7 +89,7 @@ function MonthLabels({ weeks }) {
 }
 
 // Day labels
-function DayLabels() {
+function DayLabels({ isDark }) {
     const days = ['Sun', '', 'Tue', '', 'Thu', '', 'Sat']
 
     return (
@@ -99,7 +100,7 @@ function DayLabels() {
                         key={i}
                         position={[-2.5, 0, i]}
                         fontSize={0.5}
-                        color="#64748b"
+                        color={isDark ? '#64748b' : '#94a3b8'}
                         anchorX="right"
                     >
                         {day}
@@ -111,14 +112,14 @@ function DayLabels() {
 }
 
 // Tooltip component
-function Tooltip({ data }) {
+function Tooltip({ data, isDark }) {
     if (!data) return null
 
     return (
         <Html position={[data.position.x, data.position.y + 1.5, data.position.z]}>
-            <div className="bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg px-3 py-2 text-sm whitespace-nowrap shadow-xl">
-                <div className="text-white font-semibold">{data.count} contributions</div>
-                <div className="text-gray-400">{new Date(data.date).toLocaleDateString('en-US', {
+            <div className={`${isDark ? 'bg-gray-900/95 border-gray-700' : 'bg-white/95 border-gray-200 shadow-lg'} backdrop-blur-sm border rounded-lg px-3 py-2 text-sm whitespace-nowrap shadow-xl`}>
+                <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>{data.count} contributions</div>
+                <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{new Date(data.date).toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
@@ -130,34 +131,27 @@ function Tooltip({ data }) {
 }
 
 // Main 3D scene
-function ContributionScene({ weeks, maxCount }) {
+function ContributionScene({ weeks, maxCount, isDark }) {
     const [hoveredBar, setHoveredBar] = useState(null)
     const groupRef = useRef()
 
-    // Rotate the scene slowly
-    useFrame(() => {
-        if (groupRef.current) {
-            // groupRef.current.rotation.y += 0.001
-        }
-    })
-
     // Color interpolation based on contribution count
     const getColor = (count) => {
-        if (count === 0) return '#161b22'
+        if (count === 0) return isDark ? '#161b22' : '#e2e8f0'
         const intensity = Math.min(count / Math.max(maxCount * 0.5, 1), 1)
 
         // Green gradient like GitHub
-        if (intensity < 0.25) return '#0e4429'
-        if (intensity < 0.5) return '#006d32'
-        if (intensity < 0.75) return '#26a641'
-        return '#39d353'
+        if (intensity < 0.25) return isDark ? '#0e4429' : '#86efac'
+        if (intensity < 0.5) return isDark ? '#006d32' : '#4ade80'
+        if (intensity < 0.75) return isDark ? '#26a641' : '#22c55e'
+        return isDark ? '#39d353' : '#16a34a'
     }
 
     return (
         <>
             {/* Lighting */}
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[10, 20, 10]} intensity={0.8} />
+            <ambientLight intensity={isDark ? 0.4 : 0.6} />
+            <directionalLight position={[10, 20, 10]} intensity={isDark ? 0.8 : 1.0} />
             <pointLight position={[-10, 10, -10]} intensity={0.3} color="#60a5fa" />
 
             {/* Camera controls */}
@@ -171,9 +165,9 @@ function ContributionScene({ weeks, maxCount }) {
             />
 
             <group ref={groupRef}>
-                <GridFloor />
-                <MonthLabels weeks={weeks} />
-                <DayLabels />
+                <GridFloor isDark={isDark} />
+                <MonthLabels weeks={weeks} isDark={isDark} />
+                <DayLabels isDark={isDark} />
 
                 {/* Contribution bars */}
                 {weeks.map((week, weekIndex) =>
@@ -194,7 +188,7 @@ function ContributionScene({ weeks, maxCount }) {
                     })
                 )}
 
-                {hoveredBar && <Tooltip data={hoveredBar} />}
+                {hoveredBar && <Tooltip data={hoveredBar} isDark={isDark} />}
             </group>
         </>
     )
@@ -230,6 +224,8 @@ function ContributionGraph3D({ username }) {
     const [error, setError] = useState(null)
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
     const [availableYears, setAvailableYears] = useState([])
+    const { theme } = useTheme()
+    const isDark = theme === 'dark'
 
     // Helper functions for sessionStorage cache
     const getCachedData = (key) => {
@@ -324,21 +320,21 @@ function ContributionGraph3D({ username }) {
     }, [data])
 
     return (
-        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-2xl sm:rounded-3xl overflow-hidden">
+        <div className={`${isDark ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/60 border-gray-200 shadow-sm'} backdrop-blur-sm border rounded-2xl sm:rounded-3xl overflow-hidden`}>
             {/* Header */}
-            <div className="p-4 sm:p-6 border-b border-gray-700/50">
+            <div className={`p-4 sm:p-6 border-b ${isDark ? 'border-gray-700/50' : 'border-gray-200'}`}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
+                        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-3">
                             <span className="bg-gradient-to-r from-green-500 to-emerald-400 bg-clip-text text-transparent">
                                 3D Contribution Graph
                             </span>
-                            <span className="text-xs sm:text-sm font-normal text-gray-400 bg-gray-700/50 px-2 py-1 rounded-full">
+                            <span className={`text-xs sm:text-sm font-normal ${isDark ? 'text-gray-400 bg-gray-700/50' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded-full`}>
                                 Interactive
                             </span>
                         </h2>
                         {data && (
-                            <p className="text-gray-400 text-sm mt-1">
+                            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mt-1`}>
                                 {data.totalContributions} contributions in {selectedYear}
                             </p>
                         )}
@@ -348,11 +344,11 @@ function ContributionGraph3D({ username }) {
                         {/* Year Selector */}
                         {availableYears.length > 0 && (
                             <div className="flex items-center gap-2">
-                                <label className="text-gray-400 text-sm">Year:</label>
+                                <label className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>Year:</label>
                                 <select
                                     value={selectedYear}
                                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                    className="bg-gray-700/50 border border-gray-600 text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer hover:bg-gray-600/50 transition-colors"
+                                    className={`${isDark ? 'bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'} border text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer transition-colors`}
                                     disabled={loading}
                                 >
                                     {availableYears.map((year) => (
@@ -365,10 +361,13 @@ function ContributionGraph3D({ username }) {
                         )}
 
                         {/* Legend */}
-                        <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
+                        <div className={`hidden sm:flex items-center gap-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             <span>Less</span>
                             <div className="flex gap-1">
-                                {['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'].map((color, i) => (
+                                {(isDark
+                                    ? ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353']
+                                    : ['#e2e8f0', '#86efac', '#4ade80', '#22c55e', '#16a34a']
+                                ).map((color, i) => (
                                     <div
                                         key={i}
                                         className="w-3 h-3 rounded-sm"
@@ -385,30 +384,34 @@ function ContributionGraph3D({ username }) {
             {/* 3D Canvas */}
             <div className="h-[400px] sm:h-[500px] relative">
                 {error && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
+                    <div className={`absolute inset-0 flex items-center justify-center ${isDark ? 'bg-gray-900/80' : 'bg-white/80'}`}>
                         <div className="text-center">
                             <div className="text-red-400 mb-2">Failed to load contribution data</div>
-                            <div className="text-gray-500 text-sm">{error}</div>
+                            <div className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-sm`}>{error}</div>
                         </div>
                     </div>
                 )}
 
                 <Canvas
                     camera={{ position: [30, 20, 25], fov: 50 }}
-                    style={{ background: 'linear-gradient(to bottom, #0f172a, #1e293b)' }}
+                    style={{
+                        background: isDark
+                            ? 'linear-gradient(to bottom, #0f172a, #1e293b)'
+                            : 'linear-gradient(to bottom, #e2e8f0, #f1f5f9)'
+                    }}
                 >
                     {loading ? (
                         <LoadingScene />
                     ) : data?.weeks ? (
-                        <ContributionScene weeks={data.weeks} maxCount={maxCount} />
+                        <ContributionScene weeks={data.weeks} maxCount={maxCount} isDark={isDark} />
                     ) : null}
                 </Canvas>
 
                 {/* Instructions overlay */}
-                <div className="absolute bottom-4 left-4 text-xs text-gray-500 bg-gray-900/70 px-3 py-2 rounded-lg backdrop-blur-sm">
-                    <span className="text-gray-400">🖱️ Drag</span> to rotate •
-                    <span className="text-gray-400"> Scroll</span> to zoom •
-                    <span className="text-gray-400"> Hover</span> for details
+                <div className={`absolute bottom-4 left-4 text-xs ${isDark ? 'text-gray-500 bg-gray-900/70' : 'text-gray-400 bg-white/70 shadow-sm'} px-3 py-2 rounded-lg backdrop-blur-sm`}>
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>🖱️ Drag</span> to rotate •
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}> Scroll</span> to zoom •
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}> Hover</span> for details
                 </div>
             </div>
         </div>

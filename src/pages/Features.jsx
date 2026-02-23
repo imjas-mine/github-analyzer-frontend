@@ -1,9 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
 
 function Features() {
     const navigate = useNavigate()
     const location = useLocation()
     const returnTo = location.state?.returnTo
+    const { theme, toggleTheme } = useTheme()
+    const isDark = theme === 'dark'
 
     const features = [
         {
@@ -68,16 +71,16 @@ function Features() {
                 </svg>
             ),
             title: "Beautiful UI",
-            description: "A modern, responsive interface that looks stunning on any device. Dark mode optimized for comfortable viewing.",
+            description: "A modern, responsive interface that looks stunning on any device. Supports both dark and light modes for comfortable viewing.",
             gradient: "from-pink-500 to-rose-400",
             bgGlow: "bg-pink-500/20",
         },
     ]
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
+        <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]' : 'bg-gradient-to-br from-[#f8fafc] via-[#e2e8f0] to-[#f8fafc]'}`}>
             {/* Navigation */}
-            <nav className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-gray-800">
+            <nav className={`sticky top-0 z-50 ${isDark ? 'bg-[#0f172a]/95 border-gray-800' : 'bg-[#f8fafc]/95 border-gray-200'} backdrop-blur-md border-b`}>
                 <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto">
                     <div
                         className="flex items-center gap-2 sm:gap-3 cursor-pointer"
@@ -88,33 +91,50 @@ function Features() {
                                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                             </svg>
                         </div>
-                        <span className="text-white text-lg sm:text-xl font-bold">GitHub Analyzer</span>
+                        <span className={`${isDark ? 'text-white' : 'text-gray-900'} text-lg sm:text-xl font-bold`}>GitHub Analyzer</span>
                     </div>
 
-                    <button
-                        onClick={() => navigate(returnTo || '/')}
-                        className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base flex items-center gap-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        {returnTo ? 'Back' : 'Back to Home'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleTheme}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-100 shadow-md border border-gray-200'} rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110`}
+                            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                        >
+                            {isDark ? (
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                            ) : (
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => navigate(returnTo || '/')}
+                            className={`${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors text-sm sm:text-base flex items-center gap-2`}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            {returnTo ? 'Back' : 'Back to Home'}
+                        </button>
+                    </div>
                 </div>
             </nav>
 
             {/* Hero Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-12">
                 <div className="text-center mb-16 sm:mb-20">
-                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-4 py-2 mb-6">
+                    <div className={`inline-flex items-center gap-2 ${isDark ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20' : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'} border rounded-full px-4 py-2 mb-6`}>
                         <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                         </svg>
-                        <span className="text-blue-300 text-sm font-medium">Powerful Features</span>
+                        <span className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-sm font-medium`}>Powerful Features</span>
                     </div>
 
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6">
-                        <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+                        <span className={`bg-gradient-to-r ${isDark ? 'from-white via-gray-100 to-gray-300' : 'from-gray-900 via-gray-800 to-gray-600'} bg-clip-text text-transparent`}>
                             Everything You Need to
                         </span>
                         <br />
@@ -123,7 +143,7 @@ function Features() {
                         </span>
                     </h1>
 
-                    <p className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto">
+                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-lg sm:text-xl max-w-2xl mx-auto`}>
                         A comprehensive suite of tools to visualize, analyze, and understand any GitHub profile in depth.
                     </p>
                 </div>
@@ -133,7 +153,7 @@ function Features() {
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className="group relative bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 sm:p-8 hover:border-gray-600/50 transition-all duration-300 hover:transform hover:-translate-y-1"
+                            className={`group relative ${isDark ? 'bg-gray-800/30 border-gray-700/50 hover:border-gray-600/50' : 'bg-white/60 border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'} backdrop-blur-sm border rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:transform hover:-translate-y-1`}
                         >
                             {/* Glow effect */}
                             <div className={`absolute inset-0 ${feature.bgGlow} rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300`}></div>
@@ -145,10 +165,10 @@ function Features() {
                                 </div>
 
                                 {/* Content */}
-                                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                                <h3 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
                                     {feature.title}
                                 </h3>
-                                <p className="text-gray-400 leading-relaxed">
+                                <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} leading-relaxed`}>
                                     {feature.description}
                                 </p>
                             </div>
@@ -158,11 +178,11 @@ function Features() {
 
                 {/* CTA Section */}
                 <div className="mt-20 sm:mt-28 text-center">
-                    <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-gray-700/50 rounded-3xl p-8 sm:p-12 lg:p-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                    <div className={`${isDark ? 'bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border-gray-700/50' : 'bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-gray-200'} border rounded-3xl p-8 sm:p-12 lg:p-16`}>
+                        <h2 className={`text-3xl sm:text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
                             Ready to Explore?
                         </h2>
-                        <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+                        <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-lg mb-8 max-w-xl mx-auto`}>
                             Enter any GitHub username and discover insights you've never seen before.
                         </p>
                         <button
@@ -176,7 +196,7 @@ function Features() {
             </div>
 
             {/* Footer */}
-            <footer className="border-t border-gray-800 mt-20">
+            <footer className={`border-t ${isDark ? 'border-gray-800' : 'border-gray-200'} mt-20`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
@@ -185,9 +205,9 @@ function Features() {
                                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                                 </svg>
                             </div>
-                            <span className="text-gray-400 text-sm">GitHub Analyzer</span>
+                            <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>GitHub Analyzer</span>
                         </div>
-                        <p className="text-gray-500 text-sm">
+                        <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-sm`}>
                             Built with ❤️ by Jasmine
                         </p>
                     </div>
